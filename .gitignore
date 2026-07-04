@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+server/data/*.db
+server/data/*.db-*
+.DS_Store
+.idea
+coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
