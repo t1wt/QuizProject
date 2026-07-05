@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, History, Trophy, UserRound } from 'lucide-react';
+import { useAuth } from '../services/AuthContext.jsx';
 
 export default function ParticipantPage() {
+  const { user } = useAuth();
+
   return (
     <main className="workspace split-workspace">
       <section className="join-panel">
@@ -19,7 +22,7 @@ export default function ParticipantPage() {
         <div className="avatar-block">
           <UserRound size={28} />
           <div>
-            <strong>Алексей</strong>
+            <strong>{user.name}</strong>
             <span>участник последних игр</span>
           </div>
         </div>

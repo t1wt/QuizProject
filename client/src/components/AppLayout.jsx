@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LogIn, RadioTower, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, RadioTower, UserPlus } from 'lucide-react';
+import { useAuth } from '../services/AuthContext.jsx';
 
 const navItems = [
   { to: '/', label: 'Обзор' },
@@ -11,6 +12,8 @@ const navItems = [
 ];
 
 export default function AppLayout() {
+  const { isAuthenticated, logout, user } = useAuth();
+
   return (
     <div className="site-frame">
       <header className="topbar">
@@ -29,16 +32,31 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <div className="topbar-actions">
-          <NavLink className="icon-link" to="/login" title="Войти">
-            <LogIn size={18} />
-            <span>Вход</span>
-          </NavLink>
-          <NavLink className="primary-link" to="/register">
-            <UserPlus size={18} />
-            <span>Регистрация</span>
-          </NavLink>
-        </div>
+        {isAuthenticated ? (
+          <div className="topbar-actions user-actions">
+            <NavLink
+              className="icon-link"
+              to={user.role === 'organizer' ? '/organizer' : '/participant'}
+            >
+              <span>{user.name}</span>
+            </NavLink>
+            <button className="primary-link" type="button" onClick={logout}>
+              <LogOut size={18} />
+              <span>Выйти</span>
+            </button>
+          </div>
+        ) : (
+          <div className="topbar-actions">
+            <NavLink className="icon-link" to="/login" title="Войти">
+              <LogIn size={18} />
+              <span>Вход</span>
+            </NavLink>
+            <NavLink className="primary-link" to="/register">
+              <UserPlus size={18} />
+              <span>Регистрация</span>
+            </NavLink>
+          </div>
+        )}
       </header>
 
       <Outlet />

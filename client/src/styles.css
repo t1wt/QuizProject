@@ -154,6 +154,16 @@ p {
   cursor: pointer;
 }
 
+button.primary-link {
+  min-height: 40px;
+}
+
+.primary-link:disabled,
+.submit-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .ghost-link {
   border: 1px solid rgba(20, 33, 61, 0.12);
   color: #264653;
@@ -464,6 +474,27 @@ textarea {
   margin: 0;
   color: #536173;
   text-align: center;
+}
+
+.form-error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(231, 111, 81, 0.24);
+  border-radius: 8px;
+  color: #b94b32;
+  background: rgba(231, 111, 81, 0.1);
+  font-weight: 800;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  border: 1px solid rgba(20, 33, 61, 0.12);
+  border-radius: 8px;
+  color: #536173;
+  background: #ffffff;
+  font-weight: 850;
 }
 
 .form-note a,

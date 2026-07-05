@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom';
 import { BarChart3, Clock3, Plus, RadioTower } from 'lucide-react';
 import { organizerQuizzes } from '../data/demoData.js';
+import { useAuth } from '../services/AuthContext.jsx';
 
 export default function OrganizerPage() {
+  const { user } = useAuth();
+
   return (
     <main className="workspace">
       <section className="workspace-header">
         <div>
           <p className="eyebrow">кабинет организатора</p>
-          <h1>Управление квизами и эфирами.</h1>
+          <h1>{user.name}, управление квизами и эфирами.</h1>
         </div>
         <Link className="primary-link large" to="/builder">
           <Plus size={19} />

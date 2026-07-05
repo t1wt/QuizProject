@@ -4,6 +4,7 @@ import cors from 'cors';
 import express from 'express';
 import { Server } from 'socket.io';
 import { initDatabase } from './lib/database.js';
+import { createAuthRouter } from './routes/auth.js';
 
 const port = Number(process.env.PORT || 4000);
 const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
@@ -20,6 +21,8 @@ const db = initDatabase();
 
 app.use(cors({ origin: clientOrigin }));
 app.use(express.json());
+
+app.use('/api/auth', createAuthRouter(db));
 
 app.get('/api/health', (req, res) => {
   const row = db.prepare('select count(*) as count from users').get();

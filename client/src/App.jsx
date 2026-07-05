@@ -7,6 +7,7 @@ import OrganizerPage from './pages/OrganizerPage.jsx';
 import ParticipantPage from './pages/ParticipantPage.jsx';
 import ResultsPage from './pages/ResultsPage.jsx';
 import RoomPage from './pages/RoomPage.jsx';
+import RequireAuth from './components/RequireAuth.jsx';
 
 export default function App() {
   return (
@@ -15,11 +16,39 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="login" element={<AuthPage mode="login" />} />
         <Route path="register" element={<AuthPage mode="register" />} />
-        <Route path="organizer" element={<OrganizerPage />} />
-        <Route path="participant" element={<ParticipantPage />} />
-        <Route path="builder" element={<BuilderPage />} />
+        <Route
+          path="organizer"
+          element={
+            <RequireAuth role="organizer">
+              <OrganizerPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="participant"
+          element={
+            <RequireAuth role="participant">
+              <ParticipantPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="builder"
+          element={
+            <RequireAuth role="organizer">
+              <BuilderPage />
+            </RequireAuth>
+          }
+        />
         <Route path="room" element={<RoomPage />} />
-        <Route path="results" element={<ResultsPage />} />
+        <Route
+          path="results"
+          element={
+            <RequireAuth>
+              <ResultsPage />
+            </RequireAuth>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
