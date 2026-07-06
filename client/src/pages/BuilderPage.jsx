@@ -4,16 +4,14 @@ import { Check, ImagePlus, ListPlus, Plus, Save, Trash2 } from 'lucide-react';
 import { createQuiz, getQuiz, updateQuiz } from '../services/api.js';
 import { useAuth } from '../services/AuthContext.jsx';
 
-function createEmptyQuestion(position = 1) {
+function createEmptyQuestion() {
   return {
-    text: position === 1 ? 'Какой город называют северной столицей России?' : '',
+    text: '',
     imageUrl: '',
     type: 'single',
     answers: [
-      { text: position === 1 ? 'Москва' : '', isCorrect: false },
-      { text: position === 1 ? 'Санкт-Петербург' : '', isCorrect: true },
-      { text: position === 1 ? 'Казань' : '', isCorrect: false },
-      { text: position === 1 ? 'Владивосток' : '', isCorrect: false },
+      { text: '', isCorrect: true },
+      { text: '', isCorrect: false },
     ],
   };
 }
@@ -23,10 +21,10 @@ export default function BuilderPage() {
   const { quizId } = useParams();
   const { token } = useAuth();
   const [quiz, setQuiz] = useState({
-    title: 'Квиз по городам России',
-    category: 'География',
+    title: '',
+    category: '',
     timeLimitSeconds: 30,
-    rules: 'За правильный ответ начисляется 100 баллов. Ответы принимаются до окончания таймера.',
+    rules: 'За правильный ответ начисляется 100 баллов.',
     status: 'draft',
     questions: [createEmptyQuestion()],
   });
@@ -231,6 +229,7 @@ export default function BuilderPage() {
             name="title"
             value={quiz.title}
             onChange={updateQuizField}
+            placeholder="Например, География России"
             disabled={isLoading || !isEditableDraft}
             required
           />
@@ -243,6 +242,7 @@ export default function BuilderPage() {
               name="category"
               value={quiz.category}
               onChange={updateQuizField}
+              placeholder="Например, География"
               disabled={isLoading || !isEditableDraft}
               required
             />
@@ -326,6 +326,7 @@ export default function BuilderPage() {
           <textarea
             value={activeQuestion.text}
             onChange={(event) => updateQuestionField('text', event.target.value)}
+            placeholder="Введите вопрос"
             disabled={isLoading || !isEditableDraft}
             required
           />

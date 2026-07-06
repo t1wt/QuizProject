@@ -49,6 +49,7 @@ export default function App() {
           }
         />
         <Route path="room" element={<RoomPage />} />
+        <Route path="room/:roomCode" element={<RoomPage />} />
         <Route
           path="results"
           element={

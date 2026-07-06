@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LogIn, LogOut, Plus, RadioTower, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, RadioTower, UserPlus } from 'lucide-react';
 import { useAuth } from '../services/AuthContext.jsx';
 
 export default function AppLayout() {
@@ -8,7 +8,6 @@ export default function AppLayout() {
     ? user.role === 'organizer'
       ? [
           { to: '/organizer', label: 'Квизы' },
-          { to: '/builder', label: 'Создать' },
           { to: '/results', label: 'Результаты' },
         ]
       : [
@@ -46,11 +45,6 @@ export default function AppLayout() {
             >
               <span>{user.name}</span>
             </NavLink>
-            {user.role === 'organizer' && (
-              <NavLink className="primary-link quick-create" to="/builder" title="Создать квиз">
-                <Plus size={18} />
-              </NavLink>
-            )}
             <button className="primary-link" type="button" onClick={logout}>
               <LogOut size={18} />
               <span>Выйти</span>

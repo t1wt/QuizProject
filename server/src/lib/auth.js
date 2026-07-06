@@ -15,6 +15,10 @@ export function signAuthToken(user) {
   );
 }
 
+export function verifyAuthToken(token) {
+  return jwt.verify(token, jwtSecret);
+}
+
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;

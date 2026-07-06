@@ -85,3 +85,75 @@ export function updateQuizStatus(token, quizId, status) {
     body: JSON.stringify({ status }),
   });
 }
+
+export function createSession(token, quizId) {
+  return request('/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ quizId }),
+  });
+}
+
+export function getSession(roomCode) {
+  return request(`/sessions/${roomCode}`);
+}
+
+export function joinSession(roomCode, name) {
+  return request(`/sessions/${roomCode}/join`, {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function joinSessionAsUser(token, roomCode, name) {
+  return request(`/sessions/${roomCode}/join`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function startSession(token, roomCode) {
+  return request(`/sessions/${roomCode}/start`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function nextQuestion(token, roomCode) {
+  return request(`/sessions/${roomCode}/next`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function submitAnswer(roomCode, participantId, answerIds) {
+  return request(`/sessions/${roomCode}/answers`, {
+    method: 'POST',
+    body: JSON.stringify({ participantId, answerIds }),
+  });
+}
+
+export function getResults(token) {
+  return request('/results', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function getResult(token, roomCode) {
+  return request(`/results/${roomCode}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}

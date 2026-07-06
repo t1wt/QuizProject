@@ -241,9 +241,19 @@ button.primary-link {
 h1 {
   max-width: 820px;
   margin-bottom: 18px;
-  font-size: clamp(38px, 5.4vw, 78px);
+  font-size: clamp(34px, 4.6vw, 64px);
   line-height: 0.98;
   letter-spacing: 0;
+}
+
+.workspace h1,
+.page-grid h1 {
+  font-size: clamp(32px, 3.4vw, 48px);
+  line-height: 1.08;
+}
+
+.hero-layout h1 {
+  font-size: clamp(38px, 5.4vw, 72px);
 }
 
 .intro-copy p:last-child,
@@ -371,9 +381,15 @@ h1 {
   align-items: stretch;
 }
 
+.auth-grid {
+  grid-template-columns: minmax(280px, 0.78fr) minmax(340px, 0.82fr);
+  align-items: center;
+  max-width: 1060px;
+}
+
 .page-heading,
 .workspace-header {
-  padding: 34px 6px;
+  padding: 24px 6px;
 }
 
 .form-panel,
@@ -539,6 +555,10 @@ textarea {
   align-items: end;
 }
 
+.workspace-header h1 {
+  margin-bottom: 0;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -642,6 +662,11 @@ textarea {
   margin-top: 18px;
 }
 
+.code-input button {
+  border: 0;
+  cursor: pointer;
+}
+
 .code-input input {
   border: 0;
   font-size: 24px;
@@ -684,6 +709,7 @@ textarea {
 
 .builder-layout {
   align-items: start;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(420px, 1fr);
 }
 
 .builder-actions {
@@ -847,6 +873,70 @@ textarea {
   min-height: 440px;
 }
 
+.room-join-form {
+  display: grid;
+  gap: 14px;
+  max-width: 420px;
+  margin: 24px 0 0;
+}
+
+.live-question {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.live-question > span {
+  color: #e76f51;
+  font-size: 13px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.live-question h2 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.12;
+}
+
+.live-question img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.live-answers {
+  display: grid;
+  gap: 10px;
+}
+
+.live-answers button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 16px;
+  border: 1px solid rgba(20, 33, 61, 0.12);
+  border-radius: 8px;
+  color: #264653;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 850;
+  text-align: left;
+}
+
+.live-answers button.selected {
+  border-color: rgba(42, 157, 143, 0.36);
+  color: #1f7b70;
+  background: rgba(42, 157, 143, 0.11);
+}
+
+.live-answers button:disabled {
+  cursor: default;
+  opacity: 0.82;
+}
+
 .host-controls {
   flex-wrap: wrap;
   gap: 10px;
@@ -868,6 +958,15 @@ textarea {
   align-self: start;
 }
 
+.score-chip {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: #264653;
+  background: #eef3f8;
+  font-weight: 850;
+}
+
 .audience-row {
   justify-content: space-between;
   gap: 12px;
@@ -887,7 +986,7 @@ textarea {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 360px;
+  min-height: 260px;
   color: #ffffff;
   background: #14213d;
 }
@@ -903,6 +1002,85 @@ textarea {
 
 .leaderboard {
   align-self: start;
+}
+
+.results-layout {
+  grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1fr);
+  align-items: start;
+}
+
+.results-layout .winner-panel {
+  grid-column: 1 / -1;
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.result-stats article {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  border-radius: 8px;
+  background: #f7fbfc;
+}
+
+.result-stats strong {
+  font-size: 28px;
+}
+
+.result-stats span {
+  color: #536173;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.result-list {
+  display: grid;
+  gap: 10px;
+}
+
+.result-list.compact {
+  margin-top: auto;
+}
+
+.result-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  border-radius: 8px;
+  color: #264653;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.result-item.selected {
+  border-color: rgba(42, 157, 143, 0.35);
+  background: rgba(42, 157, 143, 0.1);
+}
+
+.result-item span {
+  min-width: 0;
+  font-weight: 850;
+}
+
+.result-item b {
+  color: #14213d;
+}
+
+.result-item small {
+  grid-column: 1 / -1;
+  color: #536173;
+  font-weight: 750;
 }
 
 .leader-row {
@@ -994,6 +1172,14 @@ textarea {
   .topbar-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .main-nav {
+    gap: 4px;
+  }
+
+  .main-nav a {
+    padding: 0 10px;
   }
 
   .hero-layout,

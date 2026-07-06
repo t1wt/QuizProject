@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { BarChart3, Clock3, Edit3, Plus, RotateCcw, Rocket } from 'lucide-react';
-import { getOrganizerQuizzes, updateQuizStatus } from '../services/api.js';
+import { Link, useNavigate } from 'react-router-dom';
+import { BarChart3, Clock3, Edit3, Play, Plus, RotateCcw, Rocket } from 'lucide-react';
+import { createSession, getOrganizerQuizzes, getResults, updateQuizStatus } from '../services/api.js';
 import { useAuth } from '../services/AuthContext.jsx';
+import { pluralizeRu } from '../utils/format.js';
 
 export default function OrganizerPage() {
+  const navigate = useNavigate();
   const { token, user } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [results, setResults] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
 
   async function loadQuizzes(shouldIgnore = () => false) {
@@ -34,6 +37,22 @@ export default function OrganizerPage() {
 
     loadQuizzes(() => ignore);
 
+    async function loadResults() {
+      try {
+        const data = await getResults(token);
+
+        if (!ignore) {
+          setResults(data.results);
+        }
+      } catch {
+        if (!ignore) {
+          setResults([]);
+        }
+      }
+    }
+
+    loadResults();
+
     return () => {
       ignore = true;
     };
@@ -53,8 +72,23 @@ export default function OrganizerPage() {
     }
   }
 
+  async function launchQuiz(quizId) {
+    setError('');
+    setUpdatingId(quizId);
+
+    try {
+      const data = await createSession(token, quizId);
+      navigate(`/room/${data.session.roomCode}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   const readyCount = quizzes.filter((quiz) => quiz.status === 'ready').length;
   const draftCount = quizzes.filter((quiz) => quiz.status === 'draft').length;
+  const finishedCount = results.filter((result) => result.status === 'finished').length;
 
   return (
     <main className="workspace">
@@ -78,12 +112,16 @@ export default function OrganizerPage() {
         <article>
           <BarChart3 size={22} />
           <strong>{quizzes.length}</strong>
-          <span>квиза в базе</span>
+          <span>{pluralizeRu(quizzes.length, 'квиз', 'квиза', 'квизов')} в базе</span>
         </article>
         <article>
           <Clock3 size={22} />
-          <strong>{draftCount}</strong>
-          <span>черновика</span>
+          <strong>{finishedCount || draftCount}</strong>
+          <span>
+            {finishedCount
+              ? pluralizeRu(finishedCount, 'проведен', 'проведено', 'проведено')
+              : pluralizeRu(draftCount, 'черновик', 'черновика', 'черновиков')}
+          </span>
         </article>
       </section>
 
@@ -128,15 +166,26 @@ export default function OrganizerPage() {
                     </>
                   )}
                   {quiz.status === 'ready' && (
-                    <button
-                      className="mini-button"
-                      type="button"
-                      disabled={updatingId === quiz.id}
-                      onClick={() => changeStatus(quiz.id, 'draft')}
-                    >
-                      <RotateCcw size={16} />
-                      В черновик
-                    </button>
+                    <>
+                      <button
+                        className="mini-button success"
+                        type="button"
+                        disabled={updatingId === quiz.id}
+                        onClick={() => launchQuiz(quiz.id)}
+                      >
+                        <Play size={16} />
+                        Запустить
+                      </button>
+                      <button
+                        className="mini-button"
+                        type="button"
+                        disabled={updatingId === quiz.id}
+                        onClick={() => changeStatus(quiz.id, 'draft')}
+                      >
+                        <RotateCcw size={16} />
+                        В черновик
+                      </button>
+                    </>
                   )}
                 </div>
               </article>
@@ -145,10 +194,6 @@ export default function OrganizerPage() {
         ) : (
           <div className="empty-state compact">
             <span>Пока нет квизов</span>
-            <Link className="primary-link" to="/builder">
-              <Plus size={18} />
-              <span>Создать первый</span>
-            </Link>
           </div>
         )}
       </section>
