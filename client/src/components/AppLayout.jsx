@@ -7,17 +7,18 @@ export default function AppLayout() {
   const navItems = isAuthenticated
     ? user.role === 'organizer'
       ? [
-          { to: '/organizer', label: 'Квизы' },
-          { to: '/results', label: 'Результаты' },
+          { to: '/organizer', label: 'Мои квизы' },
+          { to: '/results', label: 'История' },
         ]
       : [
           { to: '/participant', label: 'Кабинет' },
-          { to: '/room', label: 'Комната' },
-          { to: '/results', label: 'Результаты' },
+          { to: '/room', label: 'Войти по коду' },
+          { to: '/results', label: 'История' },
         ]
     : [
         { to: '/', label: 'Обзор' },
       ];
+  const roleLabel = user?.role === 'organizer' ? 'организатор' : 'участник';
 
   return (
     <div className="site-frame">
@@ -26,7 +27,10 @@ export default function AppLayout() {
           <span className="brand-mark">
             <RadioTower size={22} />
           </span>
-          <span>Project.Quiz</span>
+          <span className="brand-copy">
+            <span>Project.Quiz</span>
+            <small>live quiz room</small>
+          </span>
         </NavLink>
 
         <nav className="main-nav" aria-label="Основная навигация">
@@ -40,10 +44,11 @@ export default function AppLayout() {
         {isAuthenticated ? (
           <div className="topbar-actions user-actions">
             <NavLink
-              className="icon-link"
+              className="user-card"
               to={user.role === 'organizer' ? '/organizer' : '/participant'}
             >
               <span>{user.name}</span>
+              <small>{roleLabel}</small>
             </NavLink>
             <button className="primary-link" type="button" onClick={logout}>
               <LogOut size={18} />

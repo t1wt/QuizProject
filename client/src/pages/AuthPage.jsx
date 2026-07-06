@@ -49,7 +49,7 @@ export default function AuthPage({ mode }) {
   return (
     <main className="page-grid auth-grid">
       <section className="page-heading">
-        <p className="eyebrow">{isRegister ? 'новый профиль' : 'возвращение в эфир'}</p>
+        <p className="eyebrow">{isRegister ? 'новый профиль' : 'вход в кабинет'}</p>
         <h1>{isRegister ? 'Создайте аккаунт Project.Quiz.' : 'Войдите в свой кабинет.'}</h1>
         <p>
           Используйте один профиль для создания квизов, участия в комнатах и

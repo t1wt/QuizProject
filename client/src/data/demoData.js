@@ -14,7 +14,7 @@ export const organizerQuizzes = [
     participants: 0,
   },
   {
-    title: 'Логика эфира',
+    title: 'Логика комнаты',
     category: 'Командная игра',
     questions: 10,
     status: 'Проведен',

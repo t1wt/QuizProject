@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Check, Play, SkipForward, Trophy, UsersRound } from 'lucide-react';
+import { ArrowRight, Check, Clock3, Play, SkipForward, Trophy, UsersRound } from 'lucide-react';
 import {
   getSession,
   joinSession,
@@ -34,6 +34,7 @@ export default function RoomPage() {
   });
   const [selectedAnswerIds, setSelectedAnswerIds] = useState([]);
   const [answerStatus, setAnswerStatus] = useState('');
+  const [timeLeft, setTimeLeft] = useState(0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(Boolean(normalizedRoomCode));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +42,8 @@ export default function RoomPage() {
   const isHost = user?.role === 'organizer';
   const currentQuestion = session?.currentQuestion;
   const answered = Boolean(answerStatus);
+  const isTimeOver = session?.status === 'active' && currentQuestion && timeLeft <= 0;
+  const isLastQuestion = currentQuestion?.index === session?.quiz.totalQuestions;
 
   const participantScore = useMemo(() => {
     if (!participant || !session) {
@@ -94,7 +97,22 @@ export default function RoomPage() {
   useEffect(() => {
     setSelectedAnswerIds([]);
     setAnswerStatus('');
+    setTimeLeft(currentQuestion?.secondsLeft || 0);
   }, [currentQuestion?.id]);
+
+  useEffect(() => {
+    if (session?.status !== 'active' || !currentQuestion) {
+      return undefined;
+    }
+
+    setTimeLeft(currentQuestion.secondsLeft || 0);
+
+    const timer = window.setInterval(() => {
+      setTimeLeft((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [currentQuestion, session?.status]);
 
   function openRoom(event) {
     event.preventDefault();
@@ -156,7 +174,7 @@ export default function RoomPage() {
   }
 
   function toggleAnswer(answerId) {
-    if (!currentQuestion || answered) {
+    if (!currentQuestion || answered || isTimeOver) {
       return;
     }
 
@@ -173,7 +191,7 @@ export default function RoomPage() {
   }
 
   async function sendAnswer() {
-    if (!participant || selectedAnswerIds.length === 0) {
+    if (!participant || selectedAnswerIds.length === 0 || isTimeOver) {
       return;
     }
 
@@ -263,6 +281,11 @@ export default function RoomPage() {
                 <span>
                   Вопрос {currentQuestion.index} из {session.quiz.totalQuestions}
                 </span>
+                <div className={isTimeOver ? 'timer-chip expired' : 'timer-chip'}>
+                  <Clock3 size={17} />
+                  <strong>{timeLeft}</strong>
+                  <span>сек.</span>
+                </div>
                 <h2>{currentQuestion.text}</h2>
                 {currentQuestion.imageUrl && (
                   <img src={currentQuestion.imageUrl} alt="" />
@@ -274,7 +297,7 @@ export default function RoomPage() {
                       type="button"
                       className={selectedAnswerIds.includes(answer.id) ? 'selected' : ''}
                       onClick={() => toggleAnswer(answer.id)}
-                      disabled={isHost || !participant || answered}
+                      disabled={isHost || !participant || answered || isTimeOver}
                     >
                       <Check size={17} />
                       {answer.text}
@@ -285,11 +308,14 @@ export default function RoomPage() {
                   <button
                     className="submit-button"
                     type="button"
-                    disabled={isSubmitting || selectedAnswerIds.length === 0 || answered}
+                    disabled={isSubmitting || selectedAnswerIds.length === 0 || answered || isTimeOver}
                     onClick={sendAnswer}
                   >
-                    {answerStatus || 'Отправить ответ'}
+                    {answerStatus || (isTimeOver ? 'Время вышло' : 'Отправить ответ')}
                   </button>
+                )}
+                {!isHost && participant && isTimeOver && !answered && (
+                  <p className="time-note">Время истекло, ожидайте следующий вопрос.</p>
                 )}
               </div>
             )}
@@ -309,7 +335,7 @@ export default function RoomPage() {
                 {session.status === 'active' && (
                   <button type="button" disabled={isSubmitting} onClick={hostNext}>
                     <SkipForward size={18} />
-                    Следующий вопрос
+                    {isLastQuestion ? 'Завершить квиз' : 'Следующий вопрос'}
                   </button>
                 )}
               </div>

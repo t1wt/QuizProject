@@ -98,6 +98,17 @@ function isAnswerCorrect(db, questionId, answerIds) {
   );
 }
 
+function isQuestionExpired(session) {
+  const startedAt = session.current_question_started_at || session.started_at;
+
+  if (!startedAt) {
+    return false;
+  }
+
+  const elapsedSeconds = Math.floor((Date.now() - new Date(`${startedAt}Z`).getTime()) / 1000);
+  return elapsedSeconds >= session.time_limit_seconds;
+}
+
 export function createSessionRouter(db, io) {
   const router = Router();
 
@@ -212,7 +223,10 @@ export function createSessionRouter(db, io) {
 
     db.prepare(
       `update quiz_sessions
-       set status = 'active', current_question_id = ?, started_at = current_timestamp
+       set status = 'active',
+           current_question_id = ?,
+           current_question_started_at = current_timestamp,
+           started_at = current_timestamp
        where id = ?`,
     ).run(firstQuestionId, session.id);
 
@@ -235,12 +249,19 @@ export function createSessionRouter(db, io) {
     const nextQuestionId = questionIds[currentIndex + 1];
 
     if (nextQuestionId) {
-      db.prepare('update quiz_sessions set current_question_id = ? where id = ?')
+      db.prepare(
+        `update quiz_sessions
+         set current_question_id = ?, current_question_started_at = current_timestamp
+         where id = ?`,
+      )
         .run(nextQuestionId, session.id);
     } else {
       db.prepare(
         `update quiz_sessions
-         set status = 'finished', current_question_id = null, finished_at = current_timestamp
+         set status = 'finished',
+             current_question_id = null,
+             current_question_started_at = null,
+             finished_at = current_timestamp
          where id = ?`,
       ).run(session.id);
     }
@@ -263,6 +284,11 @@ export function createSessionRouter(db, io) {
 
     if (session.status !== 'active' || !session.current_question_id) {
       return res.status(409).json({ message: 'Сейчас нет активного вопроса' });
+    }
+
+    if (isQuestionExpired(session)) {
+      emitSessionState(io, db, session.room_code);
+      return res.status(409).json({ message: 'Время на ответ истекло' });
     }
 
     const participant = db

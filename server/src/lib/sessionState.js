@@ -7,8 +7,11 @@ export function getSessionByCode(db, roomCode) {
         quiz_sessions.room_code,
         quiz_sessions.status,
         quiz_sessions.current_question_id,
+        quiz_sessions.current_question_started_at,
         quiz_sessions.started_at,
         quiz_sessions.finished_at,
+        cast(strftime('%s', coalesce(quiz_sessions.current_question_started_at, quiz_sessions.started_at)) as integer) as current_question_started_at_unix,
+        cast(strftime('%s', 'now') as integer) as now_unix,
         quizzes.title,
         quizzes.rules,
         quizzes.time_limit_seconds
@@ -47,6 +50,12 @@ export function getSessionState(db, roomCode) {
     (question) => question.id === session.current_question_id,
   );
   const currentQuestion = currentQuestionIndex >= 0 ? questions[currentQuestionIndex] : null;
+  const elapsedSeconds = currentQuestion
+    ? Math.max(0, Number(session.now_unix) - Number(session.current_question_started_at_unix || session.now_unix))
+    : 0;
+  const secondsLeft = currentQuestion
+    ? Math.max(0, session.time_limit_seconds - elapsedSeconds)
+    : 0;
   const answers = currentQuestion
     ? db
         .prepare(
@@ -77,6 +86,8 @@ export function getSessionState(db, roomCode) {
           type: currentQuestion.type,
           position: currentQuestion.position,
           index: currentQuestionIndex + 1,
+          secondsLeft,
+          timeLimitSeconds: session.time_limit_seconds,
           answers,
         }
       : null,

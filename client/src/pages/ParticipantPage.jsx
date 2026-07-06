@@ -50,7 +50,8 @@ export default function ParticipantPage() {
     <main className="workspace split-workspace">
       <section className="join-panel">
         <p className="eyebrow">кабинет участника</p>
-        <h1>Вход в комнату по коду.</h1>
+        <h1>Войти в текущий квиз.</h1>
+        <p className="panel-copy">Введите код, который показывает организатор во время запуска комнаты.</p>
         <div className="code-input" aria-label="Код комнаты">
           <input
             value={roomCode}

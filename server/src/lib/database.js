@@ -60,6 +60,7 @@ export function initDatabase() {
       room_code text not null unique,
       status text not null default 'waiting' check (status in ('waiting', 'active', 'finished')),
       current_question_id integer,
+      current_question_started_at text,
       started_at text,
       finished_at text,
       created_at text not null default current_timestamp,
@@ -98,6 +99,18 @@ export function initDatabase() {
       alter table quizzes
       add column status text not null default 'draft'
       check (status in ('draft', 'ready', 'completed'));
+    `);
+  }
+
+  const sessionColumns = db.prepare('pragma table_info(quiz_sessions)').all();
+  const hasCurrentQuestionStartedAt = sessionColumns.some(
+    (column) => column.name === 'current_question_started_at',
+  );
+
+  if (!hasCurrentQuestionStartedAt) {
+    db.exec(`
+      alter table quiz_sessions
+      add column current_question_started_at text;
     `);
   }
 

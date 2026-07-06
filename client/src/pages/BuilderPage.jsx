@@ -345,6 +345,12 @@ export default function BuilderPage() {
           </span>
         </label>
 
+        {activeQuestion.imageUrl && (
+          <div className="builder-image-preview">
+            <img src={activeQuestion.imageUrl} alt="Предпросмотр вопроса" />
+          </div>
+        )}
+
         <div className="role-switch question-type" aria-label="Тип вопроса">
           <button
             type="button"

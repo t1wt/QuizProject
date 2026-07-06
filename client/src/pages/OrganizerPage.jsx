@@ -95,11 +95,14 @@ export default function OrganizerPage() {
       <section className="workspace-header">
         <div>
           <p className="eyebrow">кабинет организатора</p>
-          <h1>{user.name}, управление квизами и эфирами.</h1>
+          <h1>Квизы и запуски</h1>
+          <p className="workspace-lead">
+            {user.name}, создавайте квизы, переводите их в готовые и запускайте комнаты для участников.
+          </p>
         </div>
         <Link className="primary-link large" to="/builder">
           <Plus size={19} />
-          <span>Создать квиз</span>
+          <span>Новый квиз</span>
         </Link>
       </section>
 
@@ -112,14 +115,14 @@ export default function OrganizerPage() {
         <article>
           <BarChart3 size={22} />
           <strong>{quizzes.length}</strong>
-          <span>{pluralizeRu(quizzes.length, 'квиз', 'квиза', 'квизов')} в базе</span>
+          <span>{pluralizeRu(quizzes.length, 'создан', 'создано', 'создано')}</span>
         </article>
         <article>
           <Clock3 size={22} />
           <strong>{finishedCount || draftCount}</strong>
           <span>
             {finishedCount
-              ? pluralizeRu(finishedCount, 'проведен', 'проведено', 'проведено')
+              ? 'проведено'
               : pluralizeRu(draftCount, 'черновик', 'черновика', 'черновиков')}
           </span>
         </article>
@@ -141,10 +144,16 @@ export default function OrganizerPage() {
               <article key={quiz.id} className="quiz-row">
                 <div>
                   <strong>{quiz.title}</strong>
-                  <span>{quiz.category} · {quiz.questions} вопросов</span>
+                  <span>
+                    {quiz.category} · {quiz.questions}{' '}
+                    {pluralizeRu(quiz.questions, 'вопрос', 'вопроса', 'вопросов')}
+                  </span>
                 </div>
                 <div className="quiz-meta">
-                  <span>{quiz.participants} участников</span>
+                  <span>
+                    {quiz.participants}{' '}
+                    {pluralizeRu(quiz.participants, 'участник', 'участника', 'участников')}
+                  </span>
                   <b>{quiz.statusLabel}</b>
                 </div>
                 <div className="quiz-actions">
