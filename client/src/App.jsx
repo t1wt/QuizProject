@@ -40,6 +40,14 @@ export default function App() {
             </RequireAuth>
           }
         />
+        <Route
+          path="builder/:quizId"
+          element={
+            <RequireAuth role="organizer">
+              <BuilderPage />
+            </RequireAuth>
+          }
+        />
         <Route path="room" element={<RoomPage />} />
         <Route
           path="results"

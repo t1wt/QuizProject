@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getCurrentUser, loginUser, registerUser } from './api.js';
 
-const TOKEN_KEY = 'pulsequiz_token';
+const TOKEN_KEY = 'project_quiz_token';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {

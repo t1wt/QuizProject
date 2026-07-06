@@ -27,6 +27,7 @@ export function initDatabase() {
       organizer_id integer not null,
       title text not null,
       category text,
+      status text not null default 'draft' check (status in ('draft', 'ready', 'completed')),
       time_limit_seconds integer not null default 30,
       rules text,
       created_at text not null default current_timestamp,
@@ -88,6 +89,17 @@ export function initDatabase() {
       foreign key (answer_id) references answers(id) on delete cascade
     );
   `);
+
+  const quizColumns = db.prepare('pragma table_info(quizzes)').all();
+  const hasStatusColumn = quizColumns.some((column) => column.name === 'status');
+
+  if (!hasStatusColumn) {
+    db.exec(`
+      alter table quizzes
+      add column status text not null default 'draft'
+      check (status in ('draft', 'ready', 'completed'));
+    `);
+  }
 
   return db;
 }

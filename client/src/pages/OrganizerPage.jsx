@@ -1,10 +1,60 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart3, Clock3, Plus, RadioTower } from 'lucide-react';
-import { organizerQuizzes } from '../data/demoData.js';
+import { BarChart3, Clock3, Edit3, Plus, RotateCcw, Rocket } from 'lucide-react';
+import { getOrganizerQuizzes, updateQuizStatus } from '../services/api.js';
 import { useAuth } from '../services/AuthContext.jsx';
 
 export default function OrganizerPage() {
-  const { user } = useAuth();
+  const { token, user } = useAuth();
+  const [quizzes, setQuizzes] = useState([]);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  async function loadQuizzes(shouldIgnore = () => false) {
+    try {
+      const data = await getOrganizerQuizzes(token);
+
+      if (!shouldIgnore()) {
+        setQuizzes(data.quizzes);
+      }
+    } catch (err) {
+      if (!shouldIgnore()) {
+        setError(err.message);
+      }
+    } finally {
+      if (!shouldIgnore()) {
+        setIsLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    let ignore = false;
+
+    loadQuizzes(() => ignore);
+
+    return () => {
+      ignore = true;
+    };
+  }, [token]);
+
+  async function changeStatus(quizId, status) {
+    setError('');
+    setUpdatingId(quizId);
+
+    try {
+      await updateQuizStatus(token, quizId, status);
+      await loadQuizzes();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  const readyCount = quizzes.filter((quiz) => quiz.status === 'ready').length;
+  const draftCount = quizzes.filter((quiz) => quiz.status === 'draft').length;
 
   return (
     <main className="workspace">
@@ -21,19 +71,19 @@ export default function OrganizerPage() {
 
       <section className="metric-grid">
         <article>
-          <RadioTower size={22} />
-          <strong>1</strong>
-          <span>активная комната</span>
+          <Rocket size={22} />
+          <strong>{readyCount}</strong>
+          <span>готово к запуску</span>
         </article>
         <article>
           <BarChart3 size={22} />
-          <strong>3</strong>
+          <strong>{quizzes.length}</strong>
           <span>квиза в базе</span>
         </article>
         <article>
           <Clock3 size={22} />
-          <strong>18</strong>
-          <span>последних участников</span>
+          <strong>{draftCount}</strong>
+          <span>черновика</span>
         </article>
       </section>
 
@@ -43,20 +93,64 @@ export default function OrganizerPage() {
           <Link to="/results">История результатов</Link>
         </div>
 
-        <div className="quiz-list">
-          {organizerQuizzes.map((quiz) => (
-            <article key={quiz.title} className="quiz-row">
-              <div>
-                <strong>{quiz.title}</strong>
-                <span>{quiz.category} · {quiz.questions} вопросов</span>
-              </div>
-              <div>
-                <span>{quiz.participants} участников</span>
-                <b>{quiz.status}</b>
-              </div>
-            </article>
-          ))}
-        </div>
+        {error && <p className="form-error">{error}</p>}
+
+        {isLoading ? (
+          <div className="empty-state compact">Загружаем квизы...</div>
+        ) : quizzes.length > 0 ? (
+          <div className="quiz-list">
+            {quizzes.map((quiz) => (
+              <article key={quiz.id} className="quiz-row">
+                <div>
+                  <strong>{quiz.title}</strong>
+                  <span>{quiz.category} · {quiz.questions} вопросов</span>
+                </div>
+                <div className="quiz-meta">
+                  <span>{quiz.participants} участников</span>
+                  <b>{quiz.statusLabel}</b>
+                </div>
+                <div className="quiz-actions">
+                  {quiz.status === 'draft' && (
+                    <>
+                      <Link className="mini-button" to={`/builder/${quiz.id}`}>
+                        <Edit3 size={16} />
+                        Изменить
+                      </Link>
+                      <button
+                        className="mini-button success"
+                        type="button"
+                        disabled={updatingId === quiz.id}
+                        onClick={() => changeStatus(quiz.id, 'ready')}
+                      >
+                        <Rocket size={16} />
+                        Готов
+                      </button>
+                    </>
+                  )}
+                  {quiz.status === 'ready' && (
+                    <button
+                      className="mini-button"
+                      type="button"
+                      disabled={updatingId === quiz.id}
+                      onClick={() => changeStatus(quiz.id, 'draft')}
+                    >
+                      <RotateCcw size={16} />
+                      В черновик
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state compact">
+            <span>Пока нет квизов</span>
+            <Link className="primary-link" to="/builder">
+              <Plus size={18} />
+              <span>Создать первый</span>
+            </Link>
+          </div>
+        )}
       </section>
     </main>
   );

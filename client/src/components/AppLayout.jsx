@@ -1,27 +1,33 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LogIn, LogOut, RadioTower, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, Plus, RadioTower, UserPlus } from 'lucide-react';
 import { useAuth } from '../services/AuthContext.jsx';
-
-const navItems = [
-  { to: '/', label: 'Обзор' },
-  { to: '/organizer', label: 'Организатор' },
-  { to: '/participant', label: 'Участник' },
-  { to: '/builder', label: 'Конструктор' },
-  { to: '/room', label: 'Комната' },
-  { to: '/results', label: 'Итоги' },
-];
 
 export default function AppLayout() {
   const { isAuthenticated, logout, user } = useAuth();
+  const navItems = isAuthenticated
+    ? user.role === 'organizer'
+      ? [
+          { to: '/organizer', label: 'Квизы' },
+          { to: '/builder', label: 'Создать' },
+          { to: '/results', label: 'Результаты' },
+        ]
+      : [
+          { to: '/participant', label: 'Кабинет' },
+          { to: '/room', label: 'Комната' },
+          { to: '/results', label: 'Результаты' },
+        ]
+    : [
+        { to: '/', label: 'Обзор' },
+      ];
 
   return (
     <div className="site-frame">
       <header className="topbar">
-        <NavLink className="brand-row" to="/" aria-label="PulseQuiz">
+        <NavLink className="brand-row" to="/" aria-label="Project.Quiz">
           <span className="brand-mark">
             <RadioTower size={22} />
           </span>
-          <span>PulseQuiz</span>
+          <span>Project.Quiz</span>
         </NavLink>
 
         <nav className="main-nav" aria-label="Основная навигация">
@@ -40,6 +46,11 @@ export default function AppLayout() {
             >
               <span>{user.name}</span>
             </NavLink>
+            {user.role === 'organizer' && (
+              <NavLink className="primary-link quick-create" to="/builder" title="Создать квиз">
+                <Plus size={18} />
+              </NavLink>
+            )}
             <button className="primary-link" type="button" onClick={logout}>
               <LogOut size={18} />
               <span>Выйти</span>

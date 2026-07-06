@@ -50,7 +50,7 @@ export default function AuthPage({ mode }) {
     <main className="page-grid auth-grid">
       <section className="page-heading">
         <p className="eyebrow">{isRegister ? 'новый профиль' : 'возвращение в эфир'}</p>
-        <h1>{isRegister ? 'Создайте аккаунт PulseQuiz.' : 'Войдите в свой кабинет.'}</h1>
+        <h1>{isRegister ? 'Создайте аккаунт Project.Quiz.' : 'Войдите в свой кабинет.'}</h1>
         <p>
           Используйте один профиль для создания квизов, участия в комнатах и
           просмотра результатов.

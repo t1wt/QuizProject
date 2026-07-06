@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const jwtSecret = process.env.JWT_SECRET || 'pulsequiz_local_secret';
+const jwtSecret = process.env.JWT_SECRET || 'project_quiz_local_secret';
 
 export function signAuthToken(user) {
   return jwt.sign(
