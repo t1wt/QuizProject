@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import http from 'node:http';
+import path from 'node:path';
 import cors from 'cors';
 import express from 'express';
 import { Server } from 'socket.io';
@@ -11,19 +12,21 @@ import { createSessionRouter } from './routes/sessions.js';
 import { registerSocketHandlers } from './socket.js';
 
 const port = Number(process.env.PORT || 4000);
-const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const clientOrigin = process.env.CLIENT_ORIGIN;
+const isProduction = process.env.NODE_ENV === 'production';
+const distPath = path.resolve('dist');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: clientOrigin,
+    origin: clientOrigin || true,
   },
 });
 
 const db = initDatabase();
 
-app.use(cors({ origin: clientOrigin }));
+app.use(cors(clientOrigin ? { origin: clientOrigin } : undefined));
 app.use(express.json());
 
 app.use('/api/auth', createAuthRouter(db));
@@ -43,6 +46,14 @@ app.get('/api/health', (req, res) => {
 });
 
 registerSocketHandlers(io, db);
+
+if (isProduction) {
+  app.use(express.static(distPath));
+
+  app.get(/^\/(?!api|socket\.io).*/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 server.listen(port, () => {
   console.log(`Project.Quiz API listening on http://localhost:${port}`);
