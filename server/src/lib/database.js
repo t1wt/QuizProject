@@ -29,6 +29,8 @@ export function initDatabase() {
       category text,
       status text not null default 'draft' check (status in ('draft', 'ready', 'completed')),
       time_limit_seconds integer not null default 30,
+      flow_mode text not null default 'host_controlled' check (flow_mode in ('host_controlled', 'self_paced')),
+      points_per_question integer not null default 100,
       rules text,
       created_at text not null default current_timestamp,
       foreign key (organizer_id) references users(id) on delete cascade
@@ -93,12 +95,31 @@ export function initDatabase() {
 
   const quizColumns = db.prepare('pragma table_info(quizzes)').all();
   const hasStatusColumn = quizColumns.some((column) => column.name === 'status');
+  const hasFlowModeColumn = quizColumns.some((column) => column.name === 'flow_mode');
+  const hasPointsPerQuestionColumn = quizColumns.some(
+    (column) => column.name === 'points_per_question',
+  );
 
   if (!hasStatusColumn) {
     db.exec(`
       alter table quizzes
       add column status text not null default 'draft'
       check (status in ('draft', 'ready', 'completed'));
+    `);
+  }
+
+  if (!hasFlowModeColumn) {
+    db.exec(`
+      alter table quizzes
+      add column flow_mode text not null default 'host_controlled'
+      check (flow_mode in ('host_controlled', 'self_paced'));
+    `);
+  }
+
+  if (!hasPointsPerQuestionColumn) {
+    db.exec(`
+      alter table quizzes
+      add column points_per_question integer not null default 100;
     `);
   }
 

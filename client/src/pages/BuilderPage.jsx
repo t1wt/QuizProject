@@ -24,6 +24,8 @@ export default function BuilderPage() {
     title: '',
     category: '',
     timeLimitSeconds: 30,
+    flowMode: 'host_controlled',
+    pointsPerQuestion: 100,
     rules: 'За правильный ответ начисляется 100 баллов.',
     status: 'draft',
     questions: [createEmptyQuestion()],
@@ -54,6 +56,8 @@ export default function BuilderPage() {
             title: data.quiz.title,
             category: data.quiz.category,
             timeLimitSeconds: data.quiz.timeLimitSeconds,
+            flowMode: data.quiz.flowMode || 'host_controlled',
+            pointsPerQuestion: data.quiz.pointsPerQuestion ?? 100,
             rules: data.quiz.rules,
             status: data.quiz.status,
             questions: data.quiz.questions.length > 0 ? data.quiz.questions : [createEmptyQuestion()],
@@ -82,7 +86,7 @@ export default function BuilderPage() {
     const { name, value } = event.target;
     setQuiz((current) => ({
       ...current,
-      [name]: name === 'timeLimitSeconds' ? Number(value) : value,
+      [name]: ['timeLimitSeconds', 'pointsPerQuestion'].includes(name) ? Number(value) : value,
     }));
   }
 
@@ -260,6 +264,38 @@ export default function BuilderPage() {
               required
             />
           </label>
+          <label>
+            Баллы за вопрос
+            <input
+              name="pointsPerQuestion"
+              type="number"
+              min="0"
+              max="10000"
+              value={quiz.pointsPerQuestion}
+              onChange={updateQuizField}
+              disabled={isLoading || !isEditableDraft}
+              required
+            />
+          </label>
+        </div>
+
+        <div className="role-switch question-type" aria-label="Режим прохождения">
+          <button
+            type="button"
+            className={quiz.flowMode === 'host_controlled' ? 'selected' : ''}
+            onClick={() => setQuiz((current) => ({ ...current, flowMode: 'host_controlled' }))}
+            disabled={isLoading || !isEditableDraft}
+          >
+            Управляет организатор
+          </button>
+          <button
+            type="button"
+            className={quiz.flowMode === 'self_paced' ? 'selected' : ''}
+            onClick={() => setQuiz((current) => ({ ...current, flowMode: 'self_paced' }))}
+            disabled={isLoading || !isEditableDraft}
+          >
+            Участники идут вперед сами
+          </button>
         </div>
 
         <label>

@@ -34,6 +34,8 @@ export default function RoomPage() {
   });
   const [selectedAnswerIds, setSelectedAnswerIds] = useState([]);
   const [answerStatus, setAnswerStatus] = useState('');
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState([]);
+  const [selfPacedQuestionIndex, setSelfPacedQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(Boolean(normalizedRoomCode));
@@ -41,9 +43,15 @@ export default function RoomPage() {
 
   const isHost = user?.role === 'organizer';
   const currentQuestion = session?.currentQuestion;
-  const answered = Boolean(answerStatus);
-  const isTimeOver = session?.status === 'active' && currentQuestion && timeLeft <= 0;
+  const isSelfPaced = session?.quiz.flowMode === 'self_paced';
+  const visibleQuestion =
+    isSelfPaced && !isHost ? session?.questions?.[selfPacedQuestionIndex] : currentQuestion;
+  const answered = visibleQuestion
+    ? answeredQuestionIds.includes(visibleQuestion.id) || Boolean(answerStatus)
+    : Boolean(answerStatus);
+  const isTimeOver = !isSelfPaced && session?.status === 'active' && visibleQuestion && timeLeft <= 0;
   const isLastQuestion = currentQuestion?.index === session?.quiz.totalQuestions;
+  const isLastSelfPacedQuestion = selfPacedQuestionIndex >= (session?.questions?.length || 0) - 1;
 
   const participantScore = useMemo(() => {
     if (!participant || !session) {
@@ -97,22 +105,22 @@ export default function RoomPage() {
   useEffect(() => {
     setSelectedAnswerIds([]);
     setAnswerStatus('');
-    setTimeLeft(currentQuestion?.secondsLeft || 0);
-  }, [currentQuestion?.id]);
+    setTimeLeft(visibleQuestion?.secondsLeft || 0);
+  }, [visibleQuestion?.id]);
 
   useEffect(() => {
-    if (session?.status !== 'active' || !currentQuestion) {
+    if (isSelfPaced || session?.status !== 'active' || !visibleQuestion) {
       return undefined;
     }
 
-    setTimeLeft(currentQuestion.secondsLeft || 0);
+    setTimeLeft(visibleQuestion.secondsLeft || 0);
 
     const timer = window.setInterval(() => {
       setTimeLeft((current) => Math.max(0, current - 1));
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [currentQuestion, session?.status]);
+  }, [isSelfPaced, visibleQuestion, session?.status]);
 
   function openRoom(event) {
     event.preventDefault();
@@ -174,11 +182,11 @@ export default function RoomPage() {
   }
 
   function toggleAnswer(answerId) {
-    if (!currentQuestion || answered || isTimeOver) {
+    if (!visibleQuestion || answered || isTimeOver) {
       return;
     }
 
-    if (currentQuestion.type === 'single') {
+    if (visibleQuestion.type === 'single') {
       setSelectedAnswerIds([answerId]);
       return;
     }
@@ -191,7 +199,7 @@ export default function RoomPage() {
   }
 
   async function sendAnswer() {
-    if (!participant || selectedAnswerIds.length === 0 || isTimeOver) {
+    if (!participant || !visibleQuestion || selectedAnswerIds.length === 0 || isTimeOver) {
       return;
     }
 
@@ -199,8 +207,14 @@ export default function RoomPage() {
     setIsSubmitting(true);
 
     try {
-      const data = await submitAnswer(normalizedRoomCode, participant.id, selectedAnswerIds);
+      const data = await submitAnswer(
+        normalizedRoomCode,
+        participant.id,
+        selectedAnswerIds,
+        visibleQuestion?.id,
+      );
       setSession(data.session);
+      setAnsweredQuestionIds((current) => [...new Set([...current, visibleQuestion.id])]);
       setAnswerStatus(data.correct ? 'Ответ принят: верно' : 'Ответ принят');
     } catch (err) {
       setError(err.message);
@@ -276,22 +290,30 @@ export default function RoomPage() {
               </div>
             )}
 
-            {currentQuestion && (
+            {visibleQuestion && (
               <div className="live-question">
                 <span>
-                  Вопрос {currentQuestion.index} из {session.quiz.totalQuestions}
+                  Вопрос {visibleQuestion.index} из {session.quiz.totalQuestions}
                 </span>
-                <div className={isTimeOver ? 'timer-chip expired' : 'timer-chip'}>
-                  <Clock3 size={17} />
-                  <strong>{timeLeft}</strong>
-                  <span>сек.</span>
-                </div>
-                <h2>{currentQuestion.text}</h2>
-                {currentQuestion.imageUrl && (
-                  <img src={currentQuestion.imageUrl} alt="" />
+                {!isSelfPaced && (
+                  <div className={isTimeOver ? 'timer-chip expired' : 'timer-chip'}>
+                    <Clock3 size={17} />
+                    <strong>{timeLeft}</strong>
+                    <span>сек.</span>
+                  </div>
+                )}
+                {isSelfPaced && !isHost && (
+                  <div className="timer-chip">
+                    <strong>{session.quiz.pointsPerQuestion}</strong>
+                    <span>баллов</span>
+                  </div>
+                )}
+                <h2>{visibleQuestion.text}</h2>
+                {visibleQuestion.imageUrl && (
+                  <img src={visibleQuestion.imageUrl} alt="" />
                 )}
                 <div className="live-answers">
-                  {currentQuestion.answers.map((answer) => (
+                  {visibleQuestion.answers.map((answer) => (
                     <button
                       key={answer.id}
                       type="button"
@@ -313,6 +335,30 @@ export default function RoomPage() {
                   >
                     {answerStatus || (isTimeOver ? 'Время вышло' : 'Отправить ответ')}
                   </button>
+                )}
+                {!isHost && participant && isSelfPaced && answered && (
+                  <div className="builder-actions">
+                    <button
+                      className="mini-button"
+                      type="button"
+                      disabled={selfPacedQuestionIndex === 0}
+                      onClick={() => setSelfPacedQuestionIndex((current) => Math.max(0, current - 1))}
+                    >
+                      Назад
+                    </button>
+                    <button
+                      className="mini-button success"
+                      type="button"
+                      disabled={isLastSelfPacedQuestion}
+                      onClick={() =>
+                        setSelfPacedQuestionIndex((current) =>
+                          Math.min((session.questions?.length || 1) - 1, current + 1),
+                        )
+                      }
+                    >
+                      Следующий вопрос
+                    </button>
+                  </div>
                 )}
                 {!isHost && participant && isTimeOver && !answered && (
                   <p className="time-note">Время истекло, ожидайте следующий вопрос.</p>

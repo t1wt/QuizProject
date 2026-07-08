@@ -18,6 +18,8 @@ const quizSchema = z.object({
   title: z.string().trim().min(3, 'Введите название квиза'),
   category: z.string().trim().min(2, 'Введите категорию'),
   timeLimitSeconds: z.coerce.number().int().min(10).max(300),
+  flowMode: z.enum(['host_controlled', 'self_paced']).default('host_controlled'),
+  pointsPerQuestion: z.coerce.number().int().min(0).max(10000).default(100),
   rules: z.string().trim().min(5, 'Добавьте короткие правила'),
   status: z.enum(['draft', 'ready']).default('draft'),
   questions: z.array(questionSchema).min(1, 'Добавьте хотя бы один вопрос'),
@@ -80,7 +82,17 @@ function mapQuiz(row) {
 function findOwnedQuiz(db, quizId, organizerId) {
   return db
     .prepare(
-      `select id, organizer_id, title, category, status, time_limit_seconds, rules, created_at
+      `select
+        id,
+        organizer_id,
+        title,
+        category,
+        status,
+        time_limit_seconds,
+        flow_mode,
+        points_per_question,
+        rules,
+        created_at
        from quizzes
        where id = ? and organizer_id = ?`,
     )
@@ -117,6 +129,8 @@ function getQuizDetails(db, quizId, organizerId) {
     status: quiz.status,
     statusLabel: statusLabel(quiz.status),
     timeLimitSeconds: quiz.time_limit_seconds,
+    flowMode: quiz.flow_mode,
+    pointsPerQuestion: quiz.points_per_question,
     rules: quiz.rules,
     questions: questions.map((question) => ({
       id: question.id,
@@ -176,6 +190,8 @@ export function createQuizRouter(db) {
           q.category,
           q.status,
           q.created_at,
+          q.flow_mode,
+          q.points_per_question,
           count(distinct questions.id) as questions,
           count(distinct session_participants.id) as participants
         from quizzes q
@@ -218,8 +234,8 @@ export function createQuizRouter(db) {
       const quizResult = db
         .prepare(
           `insert into quizzes
-            (organizer_id, title, category, status, time_limit_seconds, rules)
-           values (?, ?, ?, ?, ?, ?)`,
+            (organizer_id, title, category, status, time_limit_seconds, flow_mode, points_per_question, rules)
+           values (?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           req.user.id,
@@ -227,6 +243,8 @@ export function createQuizRouter(db) {
           quiz.category,
           quiz.status,
           quiz.timeLimitSeconds,
+          quiz.flowMode,
+          quiz.pointsPerQuestion,
           quiz.rules,
         );
 
@@ -245,6 +263,8 @@ export function createQuizRouter(db) {
           q.category,
           q.status,
           q.created_at,
+          q.flow_mode,
+          q.points_per_question,
           count(questions.id) as questions,
           0 as participants
         from quizzes q
@@ -283,13 +303,21 @@ export function createQuizRouter(db) {
     const updateQuiz = db.transaction((updatedQuiz) => {
       db.prepare(
         `update quizzes
-         set title = ?, category = ?, status = ?, time_limit_seconds = ?, rules = ?
+         set title = ?,
+             category = ?,
+             status = ?,
+             time_limit_seconds = ?,
+             flow_mode = ?,
+             points_per_question = ?,
+             rules = ?
          where id = ? and organizer_id = ?`,
       ).run(
         updatedQuiz.title,
         updatedQuiz.category,
         updatedQuiz.status,
         updatedQuiz.timeLimitSeconds,
+        updatedQuiz.flowMode,
+        updatedQuiz.pointsPerQuestion,
         updatedQuiz.rules,
         quiz.id,
         req.user.id,

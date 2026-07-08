@@ -14,7 +14,9 @@ export function getSessionByCode(db, roomCode) {
         cast(strftime('%s', 'now') as integer) as now_unix,
         quizzes.title,
         quizzes.rules,
-        quizzes.time_limit_seconds
+        quizzes.time_limit_seconds,
+        quizzes.flow_mode,
+        quizzes.points_per_question
        from quiz_sessions
        join quizzes on quizzes.id = quiz_sessions.quiz_id
        where quiz_sessions.room_code = ?`,
@@ -66,6 +68,12 @@ export function getSessionState(db, roomCode) {
         )
         .all(currentQuestion.id)
     : [];
+  const questionAnswersStatement = db.prepare(
+    `select id, text, position
+     from answers
+     where question_id = ?
+     order by position`,
+  );
 
   return {
     id: session.id,
@@ -76,8 +84,23 @@ export function getSessionState(db, roomCode) {
       title: session.title,
       rules: session.rules,
       timeLimitSeconds: session.time_limit_seconds,
+      flowMode: session.flow_mode,
+      pointsPerQuestion: session.points_per_question,
       totalQuestions: questions.length,
     },
+    questions:
+      session.flow_mode === 'self_paced'
+        ? questions.map((question) => ({
+            id: question.id,
+            text: question.text,
+            imageUrl: question.image_url || '',
+            type: question.type,
+            position: question.position,
+            index: question.position,
+            timeLimitSeconds: session.time_limit_seconds,
+            answers: questionAnswersStatement.all(question.id),
+          }))
+        : [],
     currentQuestion: currentQuestion
       ? {
           id: currentQuestion.id,

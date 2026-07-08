@@ -135,10 +135,10 @@ export function nextQuestion(token, roomCode) {
   });
 }
 
-export function submitAnswer(roomCode, participantId, answerIds) {
+export function submitAnswer(roomCode, participantId, answerIds, questionId) {
   return request(`/sessions/${roomCode}/answers`, {
     method: 'POST',
-    body: JSON.stringify({ participantId, answerIds }),
+    body: JSON.stringify({ participantId, answerIds, questionId }),
   });
 }
 

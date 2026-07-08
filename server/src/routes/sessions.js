@@ -13,6 +13,7 @@ const joinSchema = z.object({
 
 const answerSchema = z.object({
   participantId: z.coerce.number().int().positive(),
+  questionId: z.coerce.number().int().positive().optional(),
   answerIds: z.array(z.coerce.number().int().positive()).min(1, 'Выберите ответ'),
 });
 
@@ -286,9 +287,24 @@ export function createSessionRouter(db, io) {
       return res.status(409).json({ message: 'Сейчас нет активного вопроса' });
     }
 
-    if (isQuestionExpired(session)) {
+    const questionId =
+      session.flow_mode === 'self_paced' ? parsed.data.questionId : session.current_question_id;
+
+    if (!questionId) {
+      return res.status(400).json({ message: 'Не указан вопрос' });
+    }
+
+    if (session.flow_mode !== 'self_paced' && isQuestionExpired(session)) {
       emitSessionState(io, db, session.room_code);
       return res.status(409).json({ message: 'Время на ответ истекло' });
+    }
+
+    const question = db
+      .prepare('select id from questions where id = ? and quiz_id = ?')
+      .get(questionId, session.quiz_id);
+
+    if (!question) {
+      return res.status(404).json({ message: 'Вопрос не найден' });
     }
 
     const participant = db
@@ -310,7 +326,7 @@ export function createSessionRouter(db, io) {
          where session_participant_id = ? and question_id = ?
          limit 1`,
       )
-      .get(participant.id, session.current_question_id);
+      .get(participant.id, questionId);
 
     if (existingAnswer) {
       return res.status(409).json({ message: 'Ответ уже принят' });
@@ -323,14 +339,14 @@ export function createSessionRouter(db, io) {
       );
 
       parsed.data.answerIds.forEach((answerId) => {
-        insertAnswer.run(participant.id, session.current_question_id, answerId);
+        insertAnswer.run(participant.id, questionId, answerId);
       });
 
-      const correct = isAnswerCorrect(db, session.current_question_id, parsed.data.answerIds);
+      const correct = isAnswerCorrect(db, questionId, parsed.data.answerIds);
 
       if (correct) {
-        db.prepare('update session_participants set score = score + 100 where id = ?')
-          .run(participant.id);
+        db.prepare('update session_participants set score = score + ? where id = ?')
+          .run(session.points_per_question, participant.id);
       }
 
       return correct;
